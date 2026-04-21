@@ -1,64 +1,29 @@
 from flask import Flask
-from flask_pymongo import PyMongo
-from flask_jwt_extended import JWTManager
 from config import Config
 from extensions import mongo, jwt
+from flask_cors import CORS
 
-
-# ======================
-# INIT APP
-# ======================
 app = Flask(__name__)
 app.config.from_object(Config)
 
-# ======================
-# INIT EXTENSIONS
-# ======================
-mongo = PyMongo(app)
-jwt = JWTManager(app)
+# init extension đúng cách
+mongo.init_app(app)
+jwt.init_app(app)
+CORS(app)
 
-# ======================
-# IMPORT ROUTES (sau này dùng)
-# ======================
-# ⚠️ khi chưa tạo routes thì comment lại
+# import routes
 from routes.auth_routes import auth_bp
 from routes.admin_routes import admin_bp
 from routes.driver_routes import driver_bp
 from routes.customer_routes import customer_bp
+from routes.ai_routes import ai_bp
 
-# ======================
-# REGISTER BLUEPRINT (sau này mở lại)
-# ======================
+
 app.register_blueprint(auth_bp, url_prefix="/api/auth")
 app.register_blueprint(admin_bp, url_prefix="/api/admin")
 app.register_blueprint(driver_bp, url_prefix="/api/driver")
 app.register_blueprint(customer_bp, url_prefix="/api/customer")
+app.register_blueprint(ai_bp, url_prefix="/api/ai")
 
-# ======================
-# TEST ROUTE
-# ======================
-@app.route("/")
-def home():
-    try:
-        # test insert
-        mongo.db.test.insert_one({"message": "Hello MongoDB"})
-
-        # test read
-        data = list(mongo.db.test.find({}, {"_id": 0}))
-
-        return {
-            "status": "MongoDB connected ✅",
-            "data": data
-        }
-
-    except Exception as e:
-        return {
-            "status": "MongoDB error ❌",
-            "error": str(e)
-        }
-
-# ======================
-# RUN SERVER
-# ======================
 if __name__ == "__main__":
     app.run(debug=True)
